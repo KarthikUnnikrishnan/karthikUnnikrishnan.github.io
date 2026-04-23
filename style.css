@@ -1407,6 +1407,11 @@ body.cursor-click #cursorDot {
   transform: translateY(-2px);
 }
 
+/* CTA buttons — desktop hidden, mobile-only */
+.hero-cta {
+  display: none;
+}
+
 /* ── RESPONSIVE ──────────────────────────────────────────────────── */
 
 /* 1. Medium / Tablet Landscape (max 1024px) */
@@ -1483,12 +1488,26 @@ body.cursor-click #cursorDot {
 
   .hero-tagline {
     left: 18px;
-    top: 42%;
-    max-width: 90%;
+    right: 18px;
+    top: 50%;
+    /* Center vertically, then shift down by ~half nav height so content
+       sits in the middle of the remaining screen space below the nav */
+    transform: translateY(calc(-50% + 28px));
+    padding-top: 0;
+    max-width: 92%;
+  }
+
+  .nav-logo {
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 170px);
   }
 
   .hero-tagline p {
-    font-size: 3.4rem;
+    /* Scale with viewport so text never clips on narrow screens */
+    font-size: clamp(1.9rem, 9vw, 3.4rem);
     line-height: 1.05;
     font-weight: 700;
   }
@@ -1497,13 +1516,60 @@ body.cursor-click #cursorDot {
     display: none;
   }
 
+  /* Mobile CTA buttons — match nav pill design exactly */
+  .hero-cta {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 24px;
+  }
+
+  .hcta-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: transform 0.3s var(--ease), background 0.3s var(--ease);
+  }
+
+  .hcta-btn:hover  { transform: scale(1.04); }
+  .hcta-btn:active { transform: scale(0.96); }
+
+  /* Dark pill — "View Projects" */
+  .hcta-primary {
+    background: #0c1016;
+    color: #fff;
+  }
+
+  [data-theme="dark"] .hcta-primary {
+    background: #1e2330;
+    color: #fff;
+  }
+
+  /* Light pill — "Say Hello" */
+  .hcta-ghost {
+    background: var(--pill-light);
+    color: var(--ink);
+  }
+
+
   .hero-bg-name {
-    font-size: 11vw;
-    bottom: 5%;
-    line-height: 0.8;
-    letter-spacing: -0.07em;
-    padding-right: 18px;
+    font-size: 16.5vw;
+    bottom: 0;
+    line-height: 0.82;
+    letter-spacing: -0.05em;
+    padding-right: 0;
+    padding-left: 0;
     text-align: right;
+    right: 0;
+    left: 0;
+    width: 100%;
   }
 
 
