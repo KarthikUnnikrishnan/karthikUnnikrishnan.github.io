@@ -36,8 +36,48 @@ osPrefers.addEventListener('change', e => {
   }
 });
 
+/* ══ LENIS SMOOTH SCROLL ════════════════════════════════════════════ */
+/* Buttery inertia scroll — same lib used by Awwwards / Framer / Linear */
+let lenis;
+
+if (typeof Lenis !== 'undefined') {
+  lenis = new Lenis({
+    duration       : 1.1,
+    easing         : t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // expo-out
+    orientation    : 'vertical',
+    smoothWheel    : true,
+    wheelMultiplier: 0.85,   // luxurious wheel pace
+    touchMultiplier: 1.5,    // responsive touch / trackpad
+    infinite       : false,
+  });
+
+  // Feed Lenis every animation frame
+  (function rafLoop(time) {
+    lenis.raf(time);
+    requestAnimationFrame(rafLoop);
+  })(0);
+
+  // Route all internal anchor clicks through Lenis
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', e => {
+      const id     = anchor.getAttribute('href');
+      const target = id === '#' ? document.body : document.querySelector(id);
+      if (target) { e.preventDefault(); lenis.scrollTo(target, { offset: -80, duration: 1.2 }); }
+    });
+  });
+}
+
+/* GPU compositor hints — promote key elements to their own layer */
+window.addEventListener('DOMContentLoaded', () => {
+  ['#nav', '.hero-tagline', '.hero-bg-name', '#cursorDot', '#cursorRing', '#scrollProgress']
+    .forEach(sel => { const el = document.querySelector(sel); if (el) el.style.willChange = 'transform'; });
+  if (matchMedia('(pointer: fine)').matches)
+    document.querySelectorAll('.proj-card').forEach(c => c.style.willChange = 'transform');
+});
+
 /* ══ LOADER ══ */
 window.addEventListener('load', () => {
+
   // Trigger animations instantly behind the loader curtain
   triggerHero();
   initReveal();
@@ -180,7 +220,7 @@ function initParticles() {
    PREMIUM INTERACTIONS
    ══════════════════════════════════════════════════════════════════ */
 
-/* ── 1. CUSTOM SPRING CURSOR ──────────────────────────────────────── */
+/* ── 1. PRECISION CURSOR ──────────────────────────────────────────── */
 (function initCursor() {
   // Only on devices with a fine pointer (mouse/trackpad)
   if (!matchMedia('(pointer: fine)').matches) return;
@@ -189,41 +229,40 @@ function initParticles() {
   const ring = document.getElementById('cursorRing');
   if (!dot || !ring) return;
 
-  let mx = -100, my = -100; // mouse  position
-  let rx = -100, ry = -100; // ring   position (lagged)
+  // GPU-accelerated: elements sit at (0,0) fixed, moved via transform
+  const move = (x, y) => {
+    const t = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+    dot.style.transform  = t;
+    ring.style.transform = t;
+  };
 
-  // Move dot instantly, ring with spring lag
-  document.addEventListener('mousemove', e => {
-    mx = e.clientX;
-    my = e.clientY;
-    dot.style.left = mx + 'px';
-    dot.style.top  = my + 'px';
-  });
+  document.addEventListener('mousemove', e => move(e.clientX, e.clientY), { passive: true });
 
-  // Spring-physics ring follows with lag
-  (function rafLoop() {
-    rx += (mx - rx) * 0.12;
-    ry += (my - ry) * 0.12;
-    ring.style.left = rx + 'px';
-    ring.style.top  = ry + 'px';
-    requestAnimationFrame(rafLoop);
-  })();
-
-  // Expand ring on interactive elements
+  // Expand on interactive elements
   const hoverEls = 'a, button, .proj-card, .stag, .scard, .menu-item, .nav-logo';
   document.querySelectorAll(hoverEls).forEach(el => {
     el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
     el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
   });
 
-  // Shrink dot on click
+  // Compress dot on click
   document.addEventListener('mousedown', () => document.body.classList.add('cursor-click'));
   document.addEventListener('mouseup',   () => document.body.classList.remove('cursor-click'));
 
-  // Hide when leaving window
-  document.addEventListener('mouseleave', () => { dot.style.opacity = '0'; ring.style.opacity = '0'; });
-  document.addEventListener('mouseenter', () => { dot.style.opacity = '1'; ring.style.opacity = '0.5'; });
+  // Hide when cursor leaves the window
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity  = '0';
+    ring.style.opacity = '0';
+  });
+  document.addEventListener('mouseenter', () => {
+    dot.style.opacity  = '1';
+    ring.style.opacity = '1';
+  });
+
+  // Start offscreen
+  move(-200, -200);
 })();
+
 
 
 /* ── 2. SCROLL PROGRESS BAR ───────────────────────────────────────── */
