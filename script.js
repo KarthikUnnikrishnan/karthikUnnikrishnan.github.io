@@ -1,9 +1,19 @@
 /* ══ THEME ══ */
 const html = document.documentElement;
 const themeToggle = document.getElementById('themeToggle');
-const savedTheme = localStorage.getItem('theme') || 'dark';
-if (savedTheme === 'dark') html.setAttribute('data-theme', 'dark');
 
+// Priority: localStorage (manual) > OS preference (prefers-color-scheme)
+const savedTheme  = localStorage.getItem('theme');
+const osPrefers   = window.matchMedia('(prefers-color-scheme: dark)');
+const activeTheme = savedTheme || (osPrefers.matches ? 'dark' : 'light');
+
+if (activeTheme === 'dark') {
+  html.setAttribute('data-theme', 'dark');
+} else {
+  html.removeAttribute('data-theme');
+}
+
+// Manual toggle — always saves to localStorage so it overrides OS
 themeToggle.addEventListener('click', () => {
   const isDark = html.getAttribute('data-theme') === 'dark';
   if (isDark) {
@@ -12,6 +22,17 @@ themeToggle.addEventListener('click', () => {
   } else {
     html.setAttribute('data-theme', 'dark');
     localStorage.setItem('theme', 'dark');
+  }
+});
+
+// Live OS theme change — only fires when user hasn't manually overridden
+osPrefers.addEventListener('change', e => {
+  if (!localStorage.getItem('theme')) {
+    if (e.matches) {
+      html.setAttribute('data-theme', 'dark');
+    } else {
+      html.removeAttribute('data-theme');
+    }
   }
 });
 
